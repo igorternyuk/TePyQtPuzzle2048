@@ -9,8 +9,9 @@ TITLE_OF_PROGRAM = "TePyQtPuzzle2048"
 TILE_SIZE = 100
 FIELD_WIDTH = 4
 FIELD_HEIGHT = 4
-WINDOW_WIDTH = FIELD_WIDTH * TILE_SIZE
-WINDOW_HEIGHT = FIELD_HEIGHT * TILE_SIZE
+TIMER_DELAY = 50
+WINDOW_WIDTH = FIELD_WIDTH * TILE_SIZE + 5
+WINDOW_HEIGHT = FIELD_HEIGHT * TILE_SIZE + 5
 
 COLORS ={
 0:'#2c3e50',
@@ -57,30 +58,65 @@ class MainWindow( QMainWindow ):
 class Canvas( QFrame ):
     def __init__( self, parent = None ):
         super().__init__( parent )
-        self.setFocusPolicy( Qt.StrongFocus )
         self.model = Model( FIELD_WIDTH, FIELD_HEIGHT, TILE_SIZE )
+        self.model.reset()
+        self.setFocusPolicy( Qt.StrongFocus )
+        self.timer = QBasicTimer()
+        self.timer.start( TIMER_DELAY, self )
+        self.HALF_MARGIN = 5
 
     def keyReleaseEvent( self, event ):
         key = event.key()
         if key == Qt.Key_Space:
-            self.model.slide()
+            self.model.reset()
+            self.update()
+        elif key == Qt.Key_Right:
+            self.model.slide( Directions.RIGHT )
+            self.update()
+        elif key == Qt.Key_Left:
+            self.model.slide( Directions.LEFT )
+            self.update()
+        elif key == Qt.Key_Up:
+            self.model.slide( Direction.UP )
+            self.update()
+        elif key == Qt.Key_Down:
+            self.model.slide( Directions.DOWN )
             self.update()
 
     def timerEvent( self, event ):
-        pass
+        if event.timerId() == self.timer.timerId():
+            self.model.tick()
+            self.update()
 
     def paintEvent( self, event ):
         painter = QPainter( self )
         painter.setFont( FONT )
-        for line in self.model.grid:
-            for tile in line:
-                if tile.value != 0:
-                    color = QColor( COLORS[tile.value] )
-                    painter.setBrush( color )
-                    painter.fillRect( tile.x + 2, tile.y + 2, TILE_SIZE - 2, TILE_SIZE - 2, color )
-                    painter.setPen( QPen( QColor( 50, 50, 50 ), 5 ) )
-                    painter.drawText( QRectF( tile.x, tile.y, TILE_SIZE, TILE_SIZE ),
-                     Qt.AlignCenter | Qt.AlignTop, str( tile.value ) )
+        self.render_empty_field( painter )
+        for tile in self.model.tiles:
+            if tile.is_moving():
+                self.render_tile( painter, tile )
+        for tile in self.model.tiles:
+            if not tile.is_moving():
+                self.render_tile( painter, tile )
+        self.parent().setWindowTitle(TITLE_OF_PROGRAM + " Score: " + str( self.model.score ) )
+
+    def render_empty_field( self, painter ):
+        painter.fillRect( 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, Qt.gray )
+        for i in range( self.model.field_height ):
+            for j in range ( self.model.field_width ):
+                painter.fillRect( j * TILE_SIZE + self.HALF_MARGIN,
+                 i * TILE_SIZE + self.HALF_MARGIN, TILE_SIZE - self.HALF_MARGIN,
+                  TILE_SIZE - self.HALF_MARGIN, QColor( 100, 100, 100))
+
+    def render_tile( self, painter, tile ):
+        if tile.value != 0:
+            color = QColor( COLORS[tile.value] )
+            painter.setBrush( color )
+            painter.fillRect( tile.x + self.HALF_MARGIN, tile.y + self.HALF_MARGIN,
+             TILE_SIZE - self.HALF_MARGIN, TILE_SIZE - self.HALF_MARGIN, color )
+            painter.setPen( QPen( QColor( 50, 50, 50 ), 5 ) )
+            painter.drawText( QRectF( tile.x, tile.y, TILE_SIZE, TILE_SIZE ),
+             Qt.AlignCenter | Qt.AlignTop, str( tile.value ) )
 
 if __name__ == '__main__':
     app = QApplication([])

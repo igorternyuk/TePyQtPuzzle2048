@@ -5,10 +5,11 @@ import random
 Direction = namedtuple( 'Direction', ['dx', 'dy'] )
 
 class Directions( Enum ):
-
+    @property
     def dx( self ):
         return self.value.dx
 
+    @property
     def dy( self ):
         return self.value.dy
 
