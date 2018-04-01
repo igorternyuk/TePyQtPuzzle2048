@@ -77,7 +77,7 @@ class Canvas( QFrame ):
             self.model.slide( Directions.LEFT )
             self.update()
         elif key == Qt.Key_Up:
-            self.model.slide( Direction.UP )
+            self.model.slide( Directions.UP )
             self.update()
         elif key == Qt.Key_Down:
             self.model.slide( Directions.DOWN )
@@ -98,7 +98,20 @@ class Canvas( QFrame ):
         for tile in self.model.tiles:
             if not tile.is_sliding():
                 self.render_tile( painter, tile )
-        self.parent().setWindowTitle(TITLE_OF_PROGRAM + " Score: " + str( self.model.score ) )
+        self.parent().setWindowTitle(TITLE_OF_PROGRAM + " Score: "
+        + str( self.model.score ) + " Max: "+ str( self.model.max_tile_value ) )
+        font = QFont( "Arial" )
+        font.setPointSize( 80 )
+        text = ""
+        if self.model.game_state == GameState.VICTORY:
+            painter.setPen( QPen( QColor( 0, 190, 0 ), 20 ) )
+            text = "YOU WON!!!"
+        elif self.model.game_state == GameState.DEFEAT:
+            painter.setPen( QPen( QColor( 255, 0, 0 ), 20 ) )
+            text = "YOU LOST!!!"
+        painter.drawText( QRectF( 0, 0, FIELD_WIDTH * TILE_SIZE, FIELD_HEIGHT *
+         TILE_SIZE ), Qt.AlignCenter | Qt.AlignTop, text)
+
 
     def render_empty_field( self, painter ):
         painter.fillRect( 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, Qt.gray )

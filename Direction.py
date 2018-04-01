@@ -14,7 +14,7 @@ class Directions( Enum ):
         return self.value.dy
 
     RIGHT = Direction( 1, 0 )
-    UP = Direction( 0, 1 )
+    UP = Direction( 0, -1 )
     LEFT = Direction( -1, 0 )
     DOWN = Direction( 0, 1 )
 
