@@ -93,10 +93,10 @@ class Canvas( QFrame ):
         painter.setFont( FONT )
         self.render_empty_field( painter )
         for tile in self.model.tiles:
-            if tile.is_moving():
+            if tile.is_sliding():
                 self.render_tile( painter, tile )
         for tile in self.model.tiles:
-            if not tile.is_moving():
+            if not tile.is_sliding():
                 self.render_tile( painter, tile )
         self.parent().setWindowTitle(TITLE_OF_PROGRAM + " Score: " + str( self.model.score ) )
 

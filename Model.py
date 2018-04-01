@@ -9,25 +9,22 @@ class GameState( Enum ):
     DEFEAT = 3
 
 class Tile:
-    def __init__( self, x, y, value, dir = Directions.RIGHT ):
+    def __init__( self, x, y, value ):
         self.x = x
         self.y = y
         self.value = value
         self.dest_x = x
         self.dest_y = y
-        self.direction = dir
+        self.is_merged = False
 
-    def is_moving( self ):
+    def is_sliding( self ):
         return self.x != self.dest_x or self.y != self.dest_y
 
-    def slide( self ):
-        dx = 0 if self.dest_x - self.x == 0 else (self.dest_x - self.x) / abs( self.dest_x - self.x )
-        dy = 0 if self.dest_y - self.y == 0 else (self.dest_y - self.y) / abs( self.dest_y - self.y )
-        self.x += ANIMATION_SPEED * dx
-        self.y += ANIMATION_SPEED * dy
-        #print( "dx_calc = ", dx )
-        #print( "dx_dir = ", self.direction.dx )
-        #print( "dir = ", self.direction )
+    def slide( self, direction ):
+        #dx = 0 if self.dest_x - self.x == 0 else (self.dest_x - self.x) / abs( self.dest_x - self.x )
+        #dy = 0 if self.dest_y - self.y == 0 else (self.dest_y - self.y) / abs( self.dest_y - self.y )
+        self.x += ANIMATION_SPEED * direction.dx
+        self.y += ANIMATION_SPEED * direction.dy
 
 class Model:
     def __init__( self, field_width, field_height, tile_size ):
@@ -73,6 +70,8 @@ class Model:
         self.tiles.append( Tile( 0 * self.tile_size, 0 * self.tile_size, 2))
         self.grid[0][1] = 2
         self.tiles.append( Tile( 1 * self.tile_size, 0 * self.tile_size, 2))
+        #self.grid[0][2] = 2
+        #self.tiles.append( Tile( 2 * self.tile_size, 0 * self.tile_size, 2))
         self.grid[0][3] = 4
         self.tiles.append( Tile( 3 * self.tile_size, 0 * self.tile_size, 4))
 
@@ -97,12 +96,16 @@ class Model:
         if self.game_state != GameState.PLAYING:
             return
         if direction == Directions.RIGHT:
+            self.animation_direction = Directions.RIGHT
             self.slide_right()
         elif direction == Directions.LEFT:
+            self.animation_direction = Directions.LEFT
             self.slide_left()
         elif direction == Directions.UP:
+            self.animation_direction = Directions.UP
             self.slide_up()
         elif direction == Directions.DOWN:
+            self.animation_direction = Directions.DOWN
             self.slide_down()
 
     def slide_up( self ):
@@ -116,10 +119,7 @@ class Model:
             for j in range ( 1, self.field_width, 1 ):
                 if self.grid[i][j] > 0:
                     tile_to_slide = self.find_tile( j * self.tile_size, i * self.tile_size )
-                    print("DIR_BEFORE = ", tile_to_slide.direction)
-                    tile_to_slide.direciton = Directions.LEFT
-                    print("DIR_AFTER = ", tile_to_slide.direction)
-                    is_merged = False
+                    is_merging = False
                     col = j
                     while col > 0:
                         if self.grid[i][col - 1] == 0:
@@ -127,20 +127,22 @@ class Model:
                             self.grid[i][col] = 0
                             col -= 1
                         elif self.grid[i][col] == self.grid[i][col - 1]:
-                            self.grid[i][col - 1] *= 2
-                            self.grid[i][col] = 0
                             tile_to_merge = self.find_tile( ( col - 1 ) *
                             self.tile_size, i * self.tile_size)
-                            self.merged_tiles.append( tile_to_merge )
-                            self.tiles_to_remove.append( tile_to_slide )
-                            is_merged = True
+                            if not tile_to_merge.is_merged:
+                                tile_to_merge.is_merged = True
+                                self.grid[i][col - 1] *= 2
+                                self.grid[i][col] = 0
+                                self.merged_tiles.append( tile_to_merge )
+                                self.tiles_to_remove.append( tile_to_slide )
+                                is_merging = True
                             break
                         else:
                             break
-                    if not is_merged:
-                        tile_to_slide.dest_x = col * self.tile_size
-                    else:
+                    if is_merging:
                         tile_to_slide.dest_x = ( col - 1 ) * self.tile_size
+                    else:
+                        tile_to_slide.dest_x = col * self.tile_size
                     self.is_animating = True
                     self.print_grid()
 
@@ -150,8 +152,7 @@ class Model:
                 if self.grid[i][j] > 0:
                     tile_to_slide = self.find_tile( j * self.tile_size,
                      i * self.tile_size )
-                    tile_to_slide.direciton = Directions.RIGHT
-                    is_merged = False
+                    is_merging = False
                     col = j
                     while col < self.field_width - 1:
                         if self.grid[i][col + 1] == 0:
@@ -159,21 +160,22 @@ class Model:
                             self.grid[i][col] = 0
                             col += 1
                         elif self.grid[i][col] == self.grid[i][col + 1]:
-                            self.grid[i][col + 1] *= 2
-                            self.grid[i][col] = 0
                             tile_to_merge = self.find_tile( ( col + 1 )  *
                              self.tile_size, i * self.tile_size )
-                            self.merged_tiles.append( tile_to_merge )
-                            self.tiles_to_remove.append( tile_to_slide )
-                            is_merged = True
+                            if not tile_to_merge.is_merged:
+                                tile_to_merge.is_merged = True
+                                self.grid[i][col + 1] *= 2
+                                self.grid[i][col] = 0
+                                self.merged_tiles.append( tile_to_merge )
+                                self.tiles_to_remove.append( tile_to_slide )
+                                is_merging = True
                             break
                         else:
                             break
-                    if not is_merged:
-                        tile_to_slide.dest_x = col * self.tile_size
-                    else:
+                    if is_merging:
                         tile_to_slide.dest_x = ( col + 1 ) * self.tile_size
-
+                    else:
+                        tile_to_slide.dest_x = col * self.tile_size
                     self.is_animating = True
                     self.print_grid()
 
@@ -204,30 +206,31 @@ class Model:
         if self.is_animating:
             self.is_animating = False
             for tile in self.tiles:
-                if tile.is_moving():
+                if tile.is_sliding():
                     self.is_animating = True
-                    tile.slide()
-                else:
-                    if tile in self.tiles_to_remove:
-                        x = tile.x
-                        y = tile.y
-                        print("Removing x = ", x, " y = ", y)
-                        self.tiles_to_remove.remove( tile )
-                        self.tiles.remove( tile )
-                        merged_tile = self.find_tile_to_merge( x, y )
-                        merged_tile.value *= 2
-                        self.score += tile.value
+                    tile.slide( self.animation_direction )
             if not self.is_animating:
-                self.tiles_to_remove.clear()
+                self.increase_tiles_value()
+                self.clear_tiles()
                 self.update_max_tile_value()
+                self.reset_merging_factor()
                 self.check_win()
                 self.add_tiles()
 
-    def find_tile_to_merge( self, x, y ):
+    def clear_tiles( self ):
+        for tile in self.tiles_to_remove:
+            self.tiles.remove( tile )
+        self.tiles_to_remove.clear()
+
+    def reset_merging_factor( self ):
+        for tile in self.tiles:
+            tile.is_merged = False
+
+    def increase_tiles_value( self ):
         for tile in self.merged_tiles:
-            if tile.dest_x == x and tile.dest_y == y:
-                return tile
-        return None
+            tile.value *= 2
+            self.score += tile.value
+        self.merged_tiles.clear()
 
     def update_max_tile_value( self ):
         max_val = 2
