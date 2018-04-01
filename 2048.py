@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import QMainWindow, QFrame, QDesktopWidget, QApplication
-from PyQt5.QtCore import Qt, QBasicTimer, pyqtSignal, QRectF
-from PyQt5.QtGui import QPainter, QColor, QFont, QPen
+from PyQt5.QtWidgets import QWidget, QFrame, QDesktopWidget, QApplication, QHBoxLayout, QVBoxLayout, QPushButton
+from PyQt5.QtCore import*
+from PyQt5.QtGui import*
 import sys, random
 from math import*
 from Model import*
@@ -10,8 +10,9 @@ TILE_SIZE = 100
 FIELD_WIDTH = 4
 FIELD_HEIGHT = 4
 TIMER_DELAY = 50
+GAME_INFO_PANEL_HEIGHT = 55
 WINDOW_WIDTH = FIELD_WIDTH * TILE_SIZE + 5
-WINDOW_HEIGHT = FIELD_HEIGHT * TILE_SIZE + 5
+WINDOW_HEIGHT = FIELD_HEIGHT * TILE_SIZE + GAME_INFO_PANEL_HEIGHT
 
 COLORS ={
 0:'#2c3e50',
@@ -34,14 +35,46 @@ FONT = QFont( "Arial", 28 )
 def get_font_size_by_tile_value( value ):
     return log2( value )
 
-class MainWindow( QMainWindow ):
+"""
+class Window(QWidget):
+    def __init__(self):
+        super(Window, self).__init__()
+        self.button = QPushButton('Test', self)
+        self.label = QLabel(self)
+        self.button.clicked.connect(self.handleButton)
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.label)
+        layout.addWidget(self.button)
+"""
+
+class MainWindow( QWidget ):
     def __init__( self ):
-        super().__init__()
+        super( MainWindow, self ).__init__()
         self.init_UI()
 
     def init_UI( self ):
         self.canvas = Canvas( self )
-        self.setCentralWidget( self.canvas )
+        self.canvas.setFixedSize( WINDOW_WIDTH, FIELD_HEIGHT * TILE_SIZE + 5 )
+        self.btn3x3 = QPushButton( "3x3", self )
+        #self.btn3x3.clicked.connect( self.canvas.start_new_game3x3 )
+        self.btn4x4 = QPushButton("4x4", self )
+        self.btn5x5 = QPushButton("5x5", self )
+        mainLayout = QVBoxLayout()
+        mainLayout.setSpacing( 0 )
+        mainLayout.setContentsMargins( 0, 0, 0, 0 )
+        topLayout = QHBoxLayout()
+        topLayout.setContentsMargins( 0, 0, 0, 0 )
+        topLayout.addWidget( self.canvas, 0, Qt.AlignTop )
+        bottomLayout = QHBoxLayout()
+
+        bottomLayout.addWidget( self.btn3x3 )
+        bottomLayout.addWidget( self.btn4x4 )
+        bottomLayout.addWidget( self.btn5x5 )
+
+        mainLayout.addLayout( topLayout )
+        mainLayout.addLayout( bottomLayout )
+        self.setLayout( mainLayout )
+
         self.setWindowTitle( TITLE_OF_PROGRAM )
         self.setFixedSize( WINDOW_WIDTH, WINDOW_HEIGHT )
         self.centralize()
@@ -64,6 +97,11 @@ class Canvas( QFrame ):
         self.timer = QBasicTimer()
         self.timer.start( TIMER_DELAY, self )
         self.HALF_MARGIN = 5
+
+    def start_new_game3x3( self ):
+        self.model = Model( 3, 3, TILE_SIZE )
+        self.model.reset()
+        self.parent.setFixedSize( 3 * TILE_SIZE + 100, 3 * TILE_SIZE )
 
     def keyReleaseEvent( self, event ):
         key = event.key()
