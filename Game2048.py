@@ -62,7 +62,6 @@ class MainWindow( QWidget ):
         self.move( dx, dy )
 
     def start_new_game( self, field_width, field_height ):
-        #print("Starting game with w = ", field_width, " h = ", field_height )
         self.model = Model( field_width, field_height, TILE_SIZE )
         self.model.reset()
         self.canvas.setFixedSize( self.model.field_width * TILE_SIZE + HALF_MARGIN,
@@ -151,11 +150,12 @@ class Canvas( QFrame ):
              Qt.AlignCenter | Qt.AlignTop, str( tile.value ) )
 
     def render_game_info( self, painter ):
-        font = QFont("Arial", 28 )
+        font = QFont("Arial", 28 if self.parent().model.field_width == 4
+        or self.parent().model.field_width == 5 else 14 )
         painter.setFont( font )
         max_val = self.parent().model.max_tile_value
         score = self.parent().model.score
-        color = QColor( self.COLORS[max_val] )
+        color = QColor( self.COLORS[max_val] ) if self.parent().model.max_tile_value != 64 else Qt.black
         painter.setPen( QPen( color, 7 ) )
         text = "Score: " + str( score ) + " Max: " + str( max_val )
         painter.drawText( QRectF( 0, self.height() - GAME_INFO_PANEL_HEIGHT,
