@@ -1,37 +1,18 @@
 import random
 from Direction import*
-from matrix import*
+from Tile import*
 
 class GameState( Enum ):
     PLAYING = 1
     VICTORY = 2
     DEFEAT = 3
 
-class Tile:
-    def __init__( self, x, y, value ):
-        self.x = x
-        self.y = y
-        self.value = value
-        self.dest_x = x
-        self.dest_y = y
-        self.ANIMATION_SPEED = 5
-        self.is_merged = False
-
-    def is_sliding( self ):
-        return self.x != self.dest_x or self.y != self.dest_y
-
-    def slide( self, direction ):
-        self.x += self.ANIMATION_SPEED * direction.dx
-        self.y += self.ANIMATION_SPEED * direction.dy
-
-    def __str__( self ):
-        return "(" + str(self.x) + ", " + str(self.y) + ") -> "
-        + str( self.value )
-
 class Model:
     def __init__( self, field_width, field_height, tile_size ):
-        self.WINNING_SCORE = 2048
-        self.PROBABILITY_OF_TILE_WITH_VALUE_OF_TWO = 90
+        self.WINNING_SCORES = { 3:1024, 4:2048, 5:4096 }
+        self.WINNING_SCORE = self.WINNING_SCORES[ field_width ]
+        self.TWO_PROBABILITY = 90
+        self.number_of_new_tiles = 2 if field_width == 4 or field_width == 5 else 1
         self.field_width = field_width
         self.field_height = field_height
         self.tile_size = tile_size
@@ -43,6 +24,7 @@ class Model:
         self.score = 0
         self.max_tile_value = 2
         self.game_state = GameState.PLAYING
+
 
     def __create_grid_( self ):
         grid = []
@@ -58,13 +40,12 @@ class Model:
         self.tiles = []
         self.score = 0
         self.add_tiles()
-        self.max_tile_value = 2
         self.update_max_tile_value()
         self.print_grid()
         self.game_state = GameState.PLAYING
 
     def add_tiles( self ):
-        for i in range( 2 ):
+        for i in range( self.number_of_new_tiles ):
             self.place_new_tile()
 
     def place_new_tile( self ):
@@ -73,7 +54,9 @@ class Model:
                 rand_col = random.choice( range( self.field_width ) )
                 rand_row = random.choice( range( self.field_height ) )
                 if self.grid[rand_row][rand_col] == 0:
-                    rand_val = 2 if random.choice( range(100) ) < self.PROBABILITY_OF_TILE_WITH_VALUE_OF_TWO else 4
+                    rand_val = 2
+                    if random.choice( range(100) ) > self.TWO_PROBABILITY:
+                        rand_val = 4
                     self.grid[rand_row][rand_col] = rand_val
                     new_tile = Tile( rand_col * self.tile_size,
                      rand_row * self.tile_size, rand_val)
@@ -290,9 +273,19 @@ class Model:
             if not self.is_animating:
                 self.reset_merging_factor()
                 self.clear_auxillary_tiles()
+                self.synchronize()
                 self.check_win()
                 self.add_tiles()
                 self.print_grid()
+
+    def synchronize ( self ):
+        if self.is_animating:
+            return
+        for i in range( self.field_height ):
+            for j in range( self.field_width ):
+                if self.grid[i][j] > 0:
+                    tile = self.find_tile_by_coords( j * self.tile_size, i * self.tile_size)
+                    tile.value = self.grid[i][j]
 
     def clear_auxillary_tiles( self ):
         self.merging_tiles.clear()
