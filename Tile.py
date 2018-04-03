@@ -5,7 +5,7 @@ class Tile:
         self.value = value
         self.dest_x = x
         self.dest_y = y
-        self.ANIMATION_SPEED = 10
+        self.ANIMATION_SPEED = 25
         self.is_merged = False
 
     def is_sliding( self ):

@@ -8,7 +8,7 @@ from Model import*
 TILE_SIZE = 100
 FIELD_WIDTH = 4
 FIELD_HEIGHT = 4
-HALF_MARGIN = 5
+HALF_MARGIN = 10
 GAME_INFO_PANEL_HEIGHT = 100
 BUTTON_ROW_HEIGHT = 40
 
@@ -81,6 +81,8 @@ class Canvas( QFrame ):
         super().__init__( parent )
         self.setFocusPolicy( Qt.StrongFocus )
         self.FONT = QFont( "Arial", 28 )
+        self.COLOR_BACKGROUND = QColor( 157, 129, 111 )
+        self.COLOR_EMPTY_SPOT = QColor( 178, 142, 119 )
         self.COLORS ={
         0:'#2c3e50',
         2:'#1abc9c',
@@ -146,7 +148,8 @@ class Canvas( QFrame ):
             painter.fillRect( tile.x + HALF_MARGIN, tile.y + HALF_MARGIN,
              TILE_SIZE - HALF_MARGIN, TILE_SIZE - HALF_MARGIN, color )
             painter.setPen( QPen( QColor( 50, 50, 50 ), 5 ) )
-            painter.drawText( QRectF( tile.x, tile.y, TILE_SIZE, TILE_SIZE ),
+            painter.drawText( QRectF( tile.x + HALF_MARGIN, tile.y + HALF_MARGIN,
+             TILE_SIZE - HALF_MARGIN, TILE_SIZE - HALF_MARGIN ),
              Qt.AlignCenter | Qt.AlignTop, str( tile.value ) )
 
     def render_game_info( self, painter ):
@@ -175,12 +178,13 @@ class Canvas( QFrame ):
          self.parent().model.field_height * TILE_SIZE ), Qt.AlignCenter | Qt.AlignTop, text)
 
     def render_empty_field( self, painter ):
-        painter.fillRect( 0, 0, self.width(), self.height(), QColor( 255, 178, 127 ) )
+        height = self.height() - GAME_INFO_PANEL_HEIGHT + HALF_MARGIN
+        painter.fillRect( 0, 0, self.width(), height, self.COLOR_BACKGROUND )
         for i in range( self.parent().model.field_height ):
             for j in range ( self.parent().model.field_width ):
                 painter.fillRect( j * TILE_SIZE + HALF_MARGIN,
                  i * TILE_SIZE + HALF_MARGIN, TILE_SIZE - HALF_MARGIN,
-                  TILE_SIZE - HALF_MARGIN, QColor( 227, 149, 97))
+                  TILE_SIZE - HALF_MARGIN, self.COLOR_EMPTY_SPOT )
 
 
 if __name__ == '__main__':

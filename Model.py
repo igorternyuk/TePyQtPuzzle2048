@@ -9,7 +9,7 @@ class GameState( Enum ):
 
 class Model:
     def __init__( self, field_width, field_height, tile_size ):
-        self.WINNING_SCORES= { 3:1024, 4:2048, 5:4096 }
+        self.WINNING_SCORES = { 3:1024, 4:2048, 5:4096 }
         self.TWO_PROBABILITY = 90
         self.field_width = field_width
         self.field_height = field_height
@@ -19,7 +19,7 @@ class Model:
         self.game_state = GameState.PLAYING
         self.__winnig_score = self.WINNING_SCORES[ field_width ]
         self.__tile_size = tile_size
-        self.__number_of_new_tiles = 2 if field_width == 4 or field_width == 5 else 1
+        self.__start_number_of_new_tiles = 2
         self.__grid = self.__create_grid_()
         self.__old_greed = []
         self.__tiles_moved = False
@@ -46,7 +46,7 @@ class Model:
         self.game_state = GameState.PLAYING
 
     def __add_tiles_( self ):
-        for i in range( self.__number_of_new_tiles ):
+        for i in range( self.__start_number_of_new_tiles ):
             self.__place_new_tile_()
 
     def __place_new_tile_( self ):
@@ -287,7 +287,9 @@ class Model:
                 self.__check_win_()
                 self.__reset_merging_factor_()
                 if self.__check_if_something_moved_():
-                    self.__add_tiles_()
+                    self.__place_new_tile_()
+                    if self.__count_free_spots_() == 0:
+                        self.__game_over_()
                 self.print_grid()
 
     def __synchronize_tiles_with_grid_ ( self ):
