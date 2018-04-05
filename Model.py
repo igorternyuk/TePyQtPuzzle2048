@@ -288,9 +288,34 @@ class Model:
                 self.__reset_merging_factor_()
                 if self.__check_if_something_moved_():
                     self.__place_new_tile_()
-                    if self.__count_free_spots_() == 0:
+                    if ( self.__count_free_spots_() == 0
+                     and not self.__check_if_player_has_merging_moves_() ):
                         self.__game_over_()
                 self.print_grid()
+
+    def __is_coordinates_valid__( self, row, col ):
+        return row >= 0 and row < self.field_width and col >= 0 and col < self.field_height
+
+    def __get_neighbour_spots__( self, row, col ):
+        dx = [ 1, 0, -1, 0 ]
+        dy = [ 0, 1, 0, -1 ]
+        neighbours = []
+        for dir in range( len( dx ) ):
+            nx = col + dx[dir]
+            ny = row + dy[dir]
+            if self.__is_coordinates_valid__( ny, nx ):
+                neighbours.append( self.__grid[ny][nx] )
+        return neighbours
+
+    def __check_if_player_has_merging_moves_( self ):
+        for row in range( self.field_height ):
+            for col in range( self.field_width ):
+                curr_grid_value = self.__grid[ row ][ col ]
+                neighbours = self.__get_neighbour_spots__( row, col )
+                for neighbour in neighbours:
+                    if curr_grid_value == neighbour:
+                        return True
+        return False
 
     def __synchronize_tiles_with_grid_ ( self ):
         if self.__is_animating:
