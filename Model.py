@@ -4,8 +4,9 @@ from Tile import*
 
 class GameState( Enum ):
     PLAYING = 1
-    VICTORY = 2
-    DEFEAT = 3
+    SUCCEEDED_2048 = 2
+    PLAYING_AFTER_2048 = 3
+    DEFEAT = 4
 
 class Model:
     def __init__( self, field_width, field_height, tile_size ):
@@ -41,6 +42,7 @@ class Model:
         self.tiles = []
         self.score = 0
         self.__add_tiles_()
+        self.max_tile_value = 2
         self.__update_max_tile_value_()
         self.print_grid()
         self.game_state = GameState.PLAYING
@@ -71,7 +73,8 @@ class Model:
         self.game_state = GameState.DEFEAT
 
     def slide( self, direction ):
-        if self.game_state != GameState.PLAYING or self.__is_animating:
+        if ( ( self.game_state == GameState.SUCCEEDED_2048 or
+         self.game_state == GameState.DEFEAT ) or self.__is_animating ):
             return
         self.__old_greed = copy.deepcopy( self.__grid )
         if direction == Directions.RIGHT:
@@ -240,7 +243,7 @@ class Model:
 
     def __check_win_( self ):
         if self.max_tile_value >= self.__winnig_score:
-            self.game_state = GameState.VICTORY
+            self.game_state = GameState.SUCCEEDED_2048
 
     def print_grid( self ):
         print("--------")
@@ -284,7 +287,8 @@ class Model:
             if not self.__is_animating:
                 self.__merging_tiles.clear()
                 #self.__synchronize_tiles_with_grid_()
-                self.__check_win_()
+                if self.game_state == GameState.PLAYING:
+                    self.__check_win_()
                 self.__reset_merging_factor_()
                 if self.__check_if_something_moved_():
                     self.__place_new_tile_()

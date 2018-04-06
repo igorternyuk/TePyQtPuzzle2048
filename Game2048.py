@@ -3,6 +3,7 @@ from PyQt5.QtCore import*
 from PyQt5.QtGui import*
 import sys, random
 from math import*
+from Dialog import*
 from Model import*
 
 TILE_SIZE = 100
@@ -123,6 +124,8 @@ class Canvas( QFrame ):
         if event.timerId() == self.timer.timerId():
             self.parent().model.tick()
             self.update()
+            if self.parent().model.game_state == GameState.SUCCEEDED_2048:
+                dialog = Dialog( self.parent(), self.parent() )
 
     def paintEvent( self, event ):
         painter = QPainter( self )
@@ -168,10 +171,7 @@ class Canvas( QFrame ):
         font = QFont( "Arial", 40 )
         painter.setFont( font )
         text = ""
-        if self.parent().model.game_state == GameState.VICTORY:
-            painter.setPen( QPen( QColor( 0, 190, 0 ), 60 ) )
-            text = "YOU WON!!!"
-        elif self.parent().model.game_state == GameState.DEFEAT:
+        if self.parent().model.game_state == GameState.DEFEAT:
             painter.setPen( QPen( QColor( 255, 0, 0 ), 60 ) )
             text = "YOU LOST!!!"
         painter.drawText( QRectF( 0, 0, self.parent().model.field_width * TILE_SIZE,
